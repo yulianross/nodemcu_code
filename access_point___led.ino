@@ -44,6 +44,7 @@ LinkedList<String> splitMsg(String cadena, String key) {
 }
 
 void messageEvent(const char * payload, size_t length) {
+  Serial.println(payload);
  
 }
 
@@ -67,27 +68,27 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
             break;
         case WStype_TEXT:
             if(payload[0] == '#') {
+              WiFi.mode(WIFI_OFF);
                 // we get data
                 String msg = (char*)payload;
                 LinkedList<String> inputValues = splitMsg (msg, "/");
-
-                //WiFiMulti.addAP(inputValues.get(0), inputValues.get(1));
+                
+                WiFiMulti.addAP("ONOBCE5", "sGaes2ARjz4n");
 
                 while(WiFiMulti.run() != WL_CONNECTED) {
+                  Serial.println("...");
                   delay(100);
                 }
-
-             char* event = string2char(inputValues.get(0));
-             webSocketIO.on(event, messageEvent);
+             
+             webSocketIO.on("1234", messageEvent);
              webSocketIO.on("connect", connectEvent);
              webSocketIO.begin("urlwebhook.herokuapp.com");
             }
 
             break;
     }
-    
-
 }
+
 char* string2char(String command){
     if(command.length()!=0){
         char *p = const_cast<char*>(command.c_str());
@@ -170,6 +171,19 @@ void setup() {
     // Add service to MDNS
     MDNS.addService("http", "tcp", 80);
     MDNS.addService("ws", "tcp", 81);
+ 
+    /*
+     WiFiMulti.addAP("ONOBCE5", "sGaes2ARjz4n");
+
+                while(WiFiMulti.run() != WL_CONNECTED) {
+                  Serial.println("...");
+                  delay(100);
+                }
+             
+             webSocketIO.on(string2char("1234"), messageEvent);
+             webSocketIO.on("connect", connectEvent);
+             webSocketIO.begin("urlwebhook.herokuapp.com");
+    */
 }
 
 void loop() {
