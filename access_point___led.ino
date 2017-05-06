@@ -71,16 +71,17 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
               WiFi.mode(WIFI_OFF);
                 // we get data
                 String msg = (char*)payload;
-                LinkedList<String> inputValues = splitMsg (msg, "/");
-                
-                WiFiMulti.addAP("ONOBCE5", "sGaes2ARjz4n");
+                String msgFiltered = msg.substring(1, msg.length());
+        
+                LinkedList<String> inputValues = splitMsg (msgFiltered, "/");
+                WiFiMulti.addAP(string2char(inputValues.get(0)), string2char(inputValues.get(1)));
 
                 while(WiFiMulti.run() != WL_CONNECTED) {
                   Serial.println("...");
-                  delay(100);
+                  delay(1000);
                 }
-             
-             webSocketIO.on("1234", messageEvent);
+             USE_SERIAL.println(string2char(inputValues.get(0)));
+             webSocketIO.on(string2char(inputValues.get(2)), messageEvent);
              webSocketIO.on("connect", connectEvent);
              webSocketIO.begin("urlwebhook.herokuapp.com");
             }
@@ -137,6 +138,7 @@ void setup() {
     server.on("/", []() {
         // send index.html
         // replace for better looking
+        // es necesario añadir al principio '#' cuando envias los datos de los input, 
         server.send(200, "text/html", 
         "<html>"
         "<head>"
