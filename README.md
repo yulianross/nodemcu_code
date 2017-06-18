@@ -1,2 +1,3 @@
 # nodemcu_code
-nodemcu code for identifier
+nodemcu notifier code
+http://arduino-er.blogspot.com.es/2016/05/nodemcuesp8266-read-from-separate-file.html
