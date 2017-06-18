@@ -17,7 +17,7 @@
 #include <LinkedList.h>
 #include <string>
 #include <SocketIoClient.h>
-
+#include "FS.h"
 
 #define USE_SERIAL Serial
 
@@ -27,6 +27,31 @@ ESP8266WiFiMulti WiFiMulti;
 ESP8266WebServer server = ESP8266WebServer(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 SocketIoClient webSocketIO;
+
+String html_index;
+
+void prepareFile(){
+  
+  Serial.println("Prepare file system");
+  SPIFFS.begin();
+  
+  File file = SPIFFS.open("/index.html", "r");
+  if (!file) {
+    Serial.println("file open failed");  
+  } else{
+    Serial.println("file open success");
+
+    html_index = "";
+    while (file.available()) {
+      //Serial.write(file.read());
+      String line = file.readStringUntil('\n');
+      html_index += line + "\n";
+    }
+    file.close();
+
+    Serial.print(html_index);
+  }
+}
 
 LinkedList<String> splitMsg(String cadena, String key) {
   int size = 0;
@@ -44,8 +69,9 @@ LinkedList<String> splitMsg(String cadena, String key) {
 }
 
 void messageEvent(const char * payload, size_t length) {
-  Serial.println(payload);
- 
+  digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(5000);                       // wait for 5 second
+  digitalWrite(13, LOW);    // turn the LED off by making the voltage LOW
 }
 
 void connectEvent(const char * payload, size_t length) {
@@ -121,6 +147,8 @@ void setup() {
     }
     */
 
+    prepareFile();
+    
     WiFi.softAP("arduino-er", "12345678");
     IPAddress myIP = WiFi.softAPIP();
     USE_SERIAL.print("AP IP address: ");
@@ -139,33 +167,7 @@ void setup() {
         // send index.html
         // replace for better looking
         // es necesario añadir al principio '#' cuando envias los datos de los input, 
-        server.send(200, "text/html", 
-        "<html>"
-        "<head>"
-        "<script>"
-        "var connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);"
-        "connection.onopen = function () {  connection.send('Connect ' + new Date()); };"
-        "connection.onerror = function (error) {    console.log('WebSocket Error ', error);};"
-        "connection.onmessage = function (e) {  console.log('Server: ', e.data);};"
-        "function sendData() {  "
-          "var wifi = document.getElementById('wifi').value;  "
-          "var password = document.getElementById('pw').value;  "
-          "var identifier = document.getElementById('identifier').value;  "
-          "var data = '#'+wifi+'/'+password+'/'+identifier;    "
-          "console.log('data: ' + data); "
-          "connection.send(data);"
-        "}"
-        "</script>"
-        "</head>"
-        "<body>"
-        "Connect identifier to wifi:<br/><br/>"
-        "wifi: ""<input id=\"wifi\" type=\"text\" /><br/>"
-        "password: <input id=\"pw\" type=\"text\" /><br/>"
-        "identifier: <input id=\"identifier\" type=\"text\" /><br/>"
-        "<button type=\"button\" onclick=\"sendData()\">connect</button>"
-        "</body>"
-      
-        "</html>");
+        server.send(200, "text/html", html_index);
     });
 
     server.begin();
@@ -173,19 +175,8 @@ void setup() {
     // Add service to MDNS
     MDNS.addService("http", "tcp", 80);
     MDNS.addService("ws", "tcp", 81);
- 
-    /*
-     WiFiMulti.addAP("ONOBCE5", "sGaes2ARjz4n");
-
-                while(WiFiMulti.run() != WL_CONNECTED) {
-                  Serial.println("...");
-                  delay(100);
-                }
-             
-             webSocketIO.on(string2char("1234"), messageEvent);
-             webSocketIO.on("connect", connectEvent);
-             webSocketIO.begin("urlwebhook.herokuapp.com");
-    */
+    // initialize digital pin LED_BUILTIN as an output.
+    pinMode(13, OUTPUT);
 }
 
 void loop() {
