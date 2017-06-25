@@ -4,7 +4,9 @@
   var connection = new WebSocket('ws://'+location.hostname+':81/', ['arduino']);
   connection.onopen = function () {  connection.send('Connect ' + new Date()); };
   connection.onerror = function (error) {    console.log('WebSocket Error ', error);};
-  connection.onmessage = function (e) {  console.log('Server: ', e.data);};
+  connection.onmessage = function (e) {
+    console.log('Server: ', e.data);
+    document.getElementById("state").innerHTML = e.data;};
   function sendData() {
     var wifi = document.getElementById('wifi').value;
     var password = document.getElementById('pw').value;
@@ -21,5 +23,6 @@
   password: <input id="pw" type="text"><br/>
   identifier: <input id="identifier" type="text"><br/>
   <button type="button" onclick="sendData()">connect</button>
+  <div id="state"></div>
   </body>
   </html>

@@ -48,8 +48,6 @@ void prepareFile(){
       html_index += line + "\n";
     }
     file.close();
-
-    Serial.print(html_index);
   }
 }
 
@@ -75,7 +73,14 @@ void messageEvent(const char * payload, size_t length) {
 }
 
 void connectEvent(const char * payload, size_t length) {
-   USE_SERIAL.printf("cliente conectado: %s\n", payload);
+   
+   for (int i = 0; i < 4; i ++) {
+    USE_SERIAL.printf("cliente conectado: %s\n", payload);
+    digitalWrite(13, HIGH);
+    delay(3000);
+    digitalWrite(13, LOW);
+    delay(1000);
+   }  
 }
 
 void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
@@ -89,11 +94,13 @@ void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght
             USE_SERIAL.printf("[%u] Connected from %d.%d.%d.%d url: %s\n", num, ip[0], ip[1], ip[2], ip[3], payload);
 
             // send message to client
-            webSocket.sendTXT(num, "Connected");
+            //webSocket.sendTXT(num, "Connected");
         }
             break;
         case WStype_TEXT:
-            if(payload[0] == '#') {
+            if(payload[0] == '#') { 
+              IPAddress ip = webSocket.remoteIP(num);
+              webSocket.sendTXT(num, "connecting notifier to Wifi....if the connect process is succeeded the notifier will blink 4 times. In case the connection is failed, push reset button and try to connect again");
               WiFi.mode(WIFI_OFF);
                 // we get data
                 String msg = (char*)payload;
@@ -124,7 +131,6 @@ char* string2char(String command){
 }
 
 void setup() {
-    //USE_SERIAL.begin(921600);
     USE_SERIAL.begin(115200);
 
     //USE_SERIAL.setDebugOutput(true);
@@ -169,7 +175,7 @@ void setup() {
         // es necesario añadir al principio '#' cuando envias los datos de los input, 
         server.send(200, "text/html", html_index);
     });
-
+ 
     server.begin();
 
     // Add service to MDNS
